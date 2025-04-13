@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS Virtual Patient</title>
+  <style>
+    html, body { margin: 0; padding: 0; font-family: Arial, sans-serif; height: 100%; }
+    body { display: flex; flex-direction: column; }
+    header { padding: 10px; background-color: #1e1e1e; color: white; text-align: center; }
+    header img { height: 50px; }
+    #chat-display { flex: 1; padding: 10px; background-color: #f5f5f5; overflow-y: auto; display: flex; flex-direction: column; }
+    .chat-message { background: #ffffff; border-radius: 10px; padding: 10px; margin-bottom: 10px; max-width: 90%; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); }
+    #chat-input { padding: 10px; background-color: #ddd; }
+    #input-row { display: flex; }
+    #user-input { flex: 1; padding: 10px; font-size: 16px; border: none; border-radius: 5px; resize: none; height: 60px; }
+    #send-button { margin-left: 10px; padding: 14px 24px; font-size: 18px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    #button-row { margin-top: 10px; display: flex; gap: 10px; }
+    #mic-button, #end-button { font-size: 18px; padding: 16px 20px; width: 48%; height: 60px; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    #mic-button { background-color: #2196F3; }
+    #end-button { background-color: #f44336; }
+    #start-button { padding: 20px 40px; font-size: 24px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header><img src="logo.png" alt="Logo" /></header>
+  <div style="text-align: center; padding: 10px;"><button id="start-button" onclick="startRandomScenario()">🚑 Start Simulation</button></div>
+  <div id="chat-display"></div>
+  <div id="chat-input">
+    <div id="input-row"><textarea id="user-input" placeholder="Type your message here..."></textarea><button id="send-button" onclick="sendMessage()">Send</button></div>
+    <div id="button-row"><button id="mic-button" onclick="startVoiceInput()">🎤 Speak</button><button id="end-button" onclick="endScenario()">End Scenario</button></div>
+  </div>
+  <script>
+    let totalTime = 15 * 60, countdown, scenarioActive = false, history = [];
+    function startTimer() {
+      const timer = document.getElementById('start-button');
+      scenarioActive = true;
+      countdown = setInterval(() => {
+        const mins = Math.floor(totalTime / 60), secs = totalTime % 60;
+        timer.textContent = '🕒 ' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        if (totalTime-- <= 0) { clearInterval(countdown); timer.textContent = '⏰ Time is up!'; scenarioActive = false; }
+      }, 1000);
+    }
+    function stopTimer() { clearInterval(countdown); document.getElementById('start-button').textContent = '⏹ Scenario Ended'; scenarioActive = false; }
+    async function sendMessage(messageOverride = null) {
+      const input = document.getElementById('user-input');
+      const message = messageOverride || input.value.trim();
+      if (!message) return;
+      const chat = document.getElementById('chat-display');
+      chat.innerHTML += `<div class="chat-message">${message}</div>`;
+      input.value = ''; chat.scrollTop = chat.scrollHeight;
+      if (scenarioActive && /transport(ed)? by ambulance/i.test(message)) stopTimer();
+      const res = await fetch('/.netlify/functions/handleChat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, history }) });
+      const data = await res.json(); history = data.updatedHistory;
+      chat.innerHTML += `<div class="chat-message">${data.reply || '⚠️ No response received from patient.'}</div>`;
+      speakText(data.reply);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    function speakText(text) { const synth = window.speechSynthesis; synth.speak(new SpeechSynthesisUtterance(text)); }
+    function endScenario() { stopTimer(); document.getElementById('chat-display').innerHTML += '<div class="chat-message">🚑 Scenario ended. Preparing summary and feedback...</div>'; }
+    function startVoiceInput() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US'; recognition.interimResults = false; recognition.maxAlternatives = 1;
+      recognition.onresult = e => sendMessage(e.results[0][0].transcript);
+      recognition.onerror = e => alert('Mic error: ' + e.error);
+      recognition.start();
+    }
+    function startRandomScenario() {
+      const scenarios = [ "You are dispatched to a 45-year-old male with chest pain.", "You are dispatched to a 70-year-old female in respiratory distress.", "You are dispatched to a 15-year-old male with trauma from a fall.", "You are dispatched to a 60-year-old diabetic patient with altered mental status.", "You are dispatched to a 25-year-old female who fainted at work." ];
+      const i = Math.floor(Math.random() * scenarios.length);
+      document.getElementById('chat-display').innerHTML = `<div class="chat-message">📟 Dispatch: ${scenarios[i]}</div>`;
+      totalTime = 15 * 60;
+      startTimer();
+    }
+  </script>
+</body>
+</html>
