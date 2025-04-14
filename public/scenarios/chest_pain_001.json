@@ -1,1 +1,37 @@
-
+{
+  "id": "chest_pain_001",
+  "title": "Chest Pain - 55-Year-Old Male",
+  "dispatch": "You are dispatched to a private residence for a 55-year-old male experiencing chest pain.",
+  "scene_image": "patient_1.jpg",
+  "general_impression": "Patient is seated on the couch, pale and diaphoretic. He appears anxious but alert.",
+  "patient_behavior": {
+    "speech_style": "anxious but cooperative",
+    "on_contact": "Patient says, 'It just hit me out of nowhere while I was watching TV.'"
+  },
+  "vitals": {
+    "bp": "148/92",
+    "hr": "108",
+    "rr": "22",
+    "spo2": "96%",
+    "skin": "pale, cool, clammy"
+  },
+  "opqrst": {
+    "onset": "Sudden while watching TV about 20 minutes ago",
+    "provocation": "Does not worsen or improve with movement or breathing",
+    "quality": "Pressure-like and tight",
+    "radiation": "No radiation reported",
+    "severity": "8 out of 10",
+    "time": "Started 20 minutes ago and has been constant"
+  },
+  "sample": {
+    "signs_symptoms": "Chest pain, nausea, shortness of breath",
+    "allergies": "No known drug allergies",
+    "meds": ["Lisinopril", "Nitroglycerin", "Atorvastatin"],
+    "pmh": "Hypertension, High cholesterol",
+    "last_oral": "7:00 AM (light breakfast)",
+    "events": "Was sitting on the couch watching TV when pain started"
+  },
+  "media_triggers": {
+    "on_contact": "show_image:patient_1.jpg"
+  }
+}
