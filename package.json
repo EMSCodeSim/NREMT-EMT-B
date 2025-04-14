@@ -1,15 +1,12 @@
 {
-  "name": "NREMT-EMT-B",
+  "name": "nremt-emt-b",
   "version": "1.0.0",
-  "description": "EMS Patient Simulator with ChatGPT and Netlify Functions",
-  "main": "index.js",
+  "description": "EMS Code Sim - NREMT EMT-B Virtual Patient Simulator",
+  "type": "commonjs",
   "scripts": {
-    "start": "netlify dev"
+    "build": "echo 'No build needed'"
   },
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "dependencies": {
-    "node-fetch": "^3.3.2"
+    "openai": "^4.0.0"
   }
 }
