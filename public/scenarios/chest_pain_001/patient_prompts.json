@@ -1,0 +1,35 @@
+{
+  "greetings": [
+    "Hi... I don’t feel good.",
+    "I’ve been having chest pain for a little while now."
+  ],
+  "opqrst": {
+    "onset": "It started about 20 minutes ago while I was sitting on the couch watching TV.",
+    "provocation": "It feels worse when I take a deep breath.",
+    "quality": "It’s like a crushing pressure right in the middle of my chest.",
+    "radiation": "Yeah... it goes to my jaw and down my left arm.",
+    "severity": "It’s about an 8 out of 10.",
+    "time": "It’s been constant since it started. It hasn’t gone away."
+  },
+  "sample": {
+    "signs_symptoms": "Just this chest pain and a little short of breath.",
+    "allergies": "I’m allergic to penicillin.",
+    "medications": "I take lisinopril for high blood pressure.",
+    "past_medical_history": "I’ve had high blood pressure for a few years.",
+    "last_oral_intake": "I had lunch a few hours ago.",
+    "events": "I was just relaxing when it came on all of a sudden."
+  },
+  "other_questions": {
+    "history_of_this": "No, this has never happened before.",
+    "taken_aspirin": "No, I haven’t taken anything yet.",
+    "have_nitro": "No, I’ve never needed nitro before."
+  },
+  "treatment_responses": {
+    "after_aspirin": "Okay, I chewed it. It’s bitter but I took it.",
+    "after_nitro": "Yeah... it’s starting to feel a little better. Maybe like a 4 out of 10 now."
+  },
+  "transport": {
+    "during_transport": "Thanks for helping me. I was really scared.",
+    "name_for_handoff": "My name is Thomas Miller. I’m 55. This has never happened before and it really scared me."
+  }
+}
