@@ -2,7 +2,6 @@
   "id": "chest_pain_001",
   "title": "Chest Pain - 55-Year-Old Male",
   "dispatch": "You are dispatched to a private residence for a 55-year-old male experiencing chest pain.",
-  "scene_image": "patient_1.jpg",
   "general_impression": "Patient is seated on the couch, pale and diaphoretic. He appears anxious but alert.",
   "patient_behavior": {
     "speech_style": "anxious but cooperative",
@@ -30,8 +29,5 @@
     "pmh": "Hypertension, High cholesterol",
     "last_oral": "7:00 AM (light breakfast)",
     "events": "Was sitting on the couch watching TV when pain started"
-  },
-  "media_triggers": {
-    "on_contact": "show_image:patient_1.jpg"
   }
 }
