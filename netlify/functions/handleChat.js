@@ -1,76 +1,90 @@
-import fetch from 'node-fetch';
+const fs = require("fs");
+const path = require("path");
+const { Configuration, OpenAIApi } = require("openai");
 
-const scoringTriggers = {
-  "checked_airway": /airway|open.*airway/i,
-  "gave_oxygen": /oxygen|non-rebreather|15L/i,
-  "gave_aspirin": /aspirin|ASA|324mg/i,
-  "called_als": /ALS|advanced life support/i
-};
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY
+});
+const openai = new OpenAIApi(configuration);
 
-const expectedActions = [
-  "checked_airway",
-  "gave_oxygen",
-  "gave_aspirin",
-  "called_als"
-];
+// Load a scenario by ID from the /scenario folder
+function loadScenario(scenarioId) {
+  const scenarioPath = path.join(__dirname, `../../scenario/${scenarioId}/chest_pain_001.json`);
+  if (fs.existsSync(scenarioPath)) {
+    const data = fs.readFileSync(scenarioPath, "utf8");
+    return JSON.parse(data);
+  }
+  return null;
+}
 
-export async function handler(event) {
+// Load prompts
+function loadPrompt(fileName, scenarioId) {
+  const promptPath = path.join(__dirname, `../../scenario/${scenarioId}/${fileName}`);
+  if (fs.existsSync(promptPath)) {
+    const data = fs.readFileSync(promptPath, "utf8");
+    return JSON.parse(data);
+  }
+  return null;
+}
+
+exports.handler = async function (event, context) {
   try {
-    const { message, history = [] } = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
+    const userMessage = body.message;
+    const scenarioId = body.scenarioId || "chest_pain_001";
 
-    let userScore = {};
-    Object.entries(scoringTriggers).forEach(([key, regex]) => {
-      if (regex.test(message)) {
-        userScore[key] = true;
-      }
-    });
+    const scenario = loadScenario(scenarioId);
+    if (!scenario) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: "Scenario not found." })
+      };
+    }
 
-    const systemPrompt = `
-You are simulating a 55-year-old male experiencing chest pain at home.
-Only provide information when the EMT asks. Do not volunteer full history.
-Respond only as the patient unless the user asks for information only the proctor would know.
-    `;
+    const patientPrompts = loadPrompt("patient_prompts.json", scenarioId);
+    const proctorPrompts = loadPrompt("proctor_prompts.json", scenarioId);
 
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...history,
-      { role: "user", content: message }
-    ];
+    // Very basic logic to decide who should respond
+    const isVitalsRequest = /blood pressure|pulse|respirations|spo2|breath sounds/i.test(userMessage);
+    const isPatientInteraction = /pain|history|medications|describe|where|when|what/i.test(userMessage);
 
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+    let reply = "";
+
+    if (isVitalsRequest && proctorPrompts?.vital_signs) {
+      reply = proctorPrompts.vital_signs;
+    } else if (isPatientInteraction && patientPrompts?.opqrst) {
+      reply = patientPrompts.opqrst;
+    }
+
+    // If we didn't match anything specific, escalate to ChatGPT
+    if (!reply || typeof reply !== "string") {
+      const completion = await openai.createChatCompletion({
         model: "gpt-4-turbo",
-        messages
-      })
-    });
+        messages: [
+          {
+            role: "system",
+            content: `You are an EMS simulation AI. Respond realistically as either the patient or the test proctor, based on the message given. The scenario is: ${scenario.title}. Dispatch: ${scenario.dispatch}`
+          },
+          {
+            role: "user",
+            content: userMessage
+          }
+        ]
+      });
 
-    const data = await openaiResponse.json();
-    const reply = data.choices?.[0]?.message?.content || "⚠️ AI response unavailable.";
-
-    const updatedHistory = [
-      ...history,
-      { role: "user", content: message },
-      { role: "assistant", content: reply }
-    ];
+      reply = completion.data.choices[0].message.content;
+    }
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        reply,
-        updatedHistory,
-        userScore
-      })
+      body: JSON.stringify({ reply })
     };
+
   } catch (err) {
-    console.error("handleChat.js error:", err);
+    console.error("Error in handleChat:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ reply: "⚠️ Server error." })
+      body: JSON.stringify({ error: "Server error." })
     };
   }
-}
+};
