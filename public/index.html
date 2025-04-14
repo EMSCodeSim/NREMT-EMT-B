@@ -32,8 +32,54 @@
       margin-bottom: 10px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
+    #chat-input {
+      padding: 10px;
+      background-color: #ddd;
+    }
+    #input-row {
+      display: flex;
+    }
+    #user-input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      resize: none;
+      height: 60px;
+    }
+    #send-button {
+      margin-left: 10px;
+      padding: 14px 24px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #button-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+    #mic-button, #end-button {
+      font-size: 18px;
+      padding: 16px 20px;
+      width: 48%;
+      height: 60px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #mic-button {
+      background-color: #2196F3;
+    }
+    #end-button {
+      background-color: #f44336;
+    }
     #start-button {
-      margin: 10px auto;
       padding: 20px 40px;
       font-size: 24px;
       background-color: #007bff;
@@ -41,14 +87,29 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      display: block;
+      margin: 10px auto;
     }
   </style>
 </head>
 <body>
-  <header><h1>EMS Code Sim</h1></header>
+  <header>
+    <h1>EMS Code Sim</h1>
+  </header>
+
   <button id="start-button" onclick="startRandomScenario()">🚑 Start Simulation</button>
+
   <div id="chat-display"></div>
+
+  <div id="chat-input">
+    <div id="input-row">
+      <textarea id="user-input" placeholder="Type your message here..."></textarea>
+      <button id="send-button" onclick="sendMessage()">Send</button>
+    </div>
+    <div id="button-row">
+      <button id="mic-button" onclick="startVoiceInput()">🎤 Speak</button>
+      <button id="end-button" onclick="endScenario()">End Scenario</button>
+    </div>
+  </div>
 
   <script>
     let totalTime = 15 * 60;
@@ -72,6 +133,89 @@
         }
         totalTime--;
       }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(countdown);
+      document.getElementById('start-button').textContent = '⏹ Scenario Ended';
+      scenarioActive = false;
+    }
+
+    async function sendMessage(messageOverride = null) {
+      const input = document.getElementById('user-input');
+      const message = messageOverride || input.value.trim();
+      if (!message) return;
+
+      const chat = document.getElementById('chat-display');
+      const userMsg = document.createElement('div');
+      userMsg.className = 'chat-message';
+      userMsg.textContent = message;
+      chat.appendChild(userMsg);
+      chat.scrollTop = chat.scrollHeight;
+
+      if (scenarioActive && /transport(ed)? by ambulance/i.test(message)) {
+        stopTimer();
+      }
+
+      input.value = '';
+
+      try {
+        const response = await fetch('/.netlify/functions/handleChat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, history, scenario: currentScenario })
+        });
+
+        const data = await response.json();
+        history = data.updatedHistory;
+
+        const botReply = data?.reply || '⚠️ No response received from patient.';
+        const botMsg = document.createElement('div');
+        botMsg.className = 'chat-message';
+        botMsg.textContent = botReply;
+        chat.appendChild(botMsg);
+        chat.scrollTop = chat.scrollHeight;
+
+        speakText(botReply);
+      } catch {
+        const errMsg = document.createElement('div');
+        errMsg.className = 'chat-message';
+        errMsg.textContent = 'Error communicating with AI.';
+        chat.appendChild(errMsg);
+      }
+    }
+
+    function speakText(text) {
+      const synth = window.speechSynthesis;
+      const utter = new SpeechSynthesisUtterance(text);
+      synth.speak(utter);
+    }
+
+    function endScenario() {
+      stopTimer();
+      const chat = document.getElementById('chat-display');
+      const endMsg = document.createElement('div');
+      endMsg.className = 'chat-message';
+      endMsg.textContent = '🚑 Scenario ended. Preparing summary and feedback...';
+      chat.appendChild(endMsg);
+    }
+
+    function startVoiceInput() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = function(event) {
+        const speechResult = event.results[0][0].transcript;
+        sendMessage(speechResult);
+      };
+
+      recognition.onerror = function(event) {
+        alert('Mic error: ' + event.error);
+      };
+
+      recognition.start();
     }
 
     async function startRandomScenario() {
