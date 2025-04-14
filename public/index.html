@@ -8,7 +8,7 @@
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding-bottom: 100px; /* space for bottom bar */
+      padding-bottom: 100px; /* Space for bottom bar */
     }
 
     #chat-display {
@@ -42,6 +42,15 @@
       padding: 10px;
       font-size: 16px;
     }
+
+    #start-scenario-btn {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      padding: 10px 20px;
+    }
   </style>
 </head>
 <body>
@@ -52,9 +61,7 @@
   </div>
 
   <!-- Button to start the scenario -->
-  <div style="text-align: center; margin: 10px;">
-    <button onclick="startRandomScenario()">Start Scenario</button>
-  </div>
+  <button id="start-scenario-btn">Start Scenario</button>
 
   <!-- Typing and control area at bottom -->
   <div id="input-area">
@@ -66,6 +73,33 @@
 
   <!-- JavaScript -->
   <script>
+    document.getElementById("start-scenario-btn").addEventListener("click", function () {
+      const button = this;
+      let timeLeft = 15 * 60; // 15 minutes in seconds
+
+      // Update the button text to show the countdown timer
+      function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        button.textContent = `Time Left: ${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+        timeLeft--;
+
+        // Stop the timer when it reaches 0
+        if (timeLeft < 0) {
+          clearInterval(timerInterval);
+          button.textContent = "Time's Up!";
+        }
+      }
+
+      // Disable the button and start the countdown
+      button.disabled = true;
+      updateTimer();
+      const timerInterval = setInterval(updateTimer, 1000);
+
+      // Start the random scenario
+      startRandomScenario();
+    });
+
     async function startRandomScenario() {
       try {
         const res = await fetch("/scenario/chest_pain_001/pain_001.json");
@@ -77,8 +111,6 @@
         dispatch.className = "chat-message";
         dispatch.textContent = `📟 Dispatch: ${currentScenario.dispatch}`;
         chat.appendChild(dispatch);
-
-        startTimer(15 * 60);
       } catch (error) {
         const chat = document.getElementById("chat-display");
         const errMsg = document.createElement("div");
@@ -98,27 +130,5 @@
         userMsg.className = "chat-message";
         userMsg.textContent = `👨‍⚕️ You: ${message}`;
         chat.appendChild(userMsg);
-        input.value = "";
-        chat.scrollTop = chat.scrollHeight; // scroll to bottom
-      }
-    }
-
-    function speak() {
-      alert("🎤 Speak button pressed (placeholder)");
-    }
-
-    function endScenario() {
-      const chat = document.getElementById("chat-display");
-      const endMsg = document.createElement("div");
-      endMsg.className = "chat-message";
-      endMsg.textContent = "🚨 Scenario ended.";
-      chat.appendChild(endMsg);
-    }
-
-    function startTimer(totalTime) {
-      console.log(`Timer started for ${totalTime} seconds.`);
-    }
-  </script>
-
-</body>
-</html>
+        input.value =*
+
