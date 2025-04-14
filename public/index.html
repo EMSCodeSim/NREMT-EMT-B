@@ -65,19 +65,20 @@
 
   <!-- Typing and control area at bottom -->
   <div id="input-area">
-    <button onclick="speak()">🎤 Speak</button>
+    <button id="speak-btn">🎤 Speak</button>
     <input type="text" id="user-input" placeholder="Type your message..." />
-    <button onclick="sendMessage()">Send</button>
-    <button onclick="endScenario()">🚑 End Scenario</button>
+    <button id="send-btn">Send</button>
+    <button id="end-scenario-btn">🚑 End Scenario</button>
   </div>
 
   <!-- JavaScript -->
   <script>
+    // Start Scenario Button Logic
     document.getElementById("start-scenario-btn").addEventListener("click", function () {
       const button = this;
       let timeLeft = 15 * 60; // 15 minutes in seconds
 
-      // Update the button text to show the countdown timer
+      // Countdown Timer
       function updateTimer() {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
@@ -100,6 +101,7 @@
       startRandomScenario();
     });
 
+    // Start Random Scenario Logic
     async function startRandomScenario() {
       try {
         const res = await fetch("/scenario/chest_pain_001/pain_001.json");
@@ -121,7 +123,8 @@
       }
     }
 
-    function sendMessage() {
+    // Send Message Button Logic
+    document.getElementById("send-btn").addEventListener("click", function () {
       const input = document.getElementById("user-input");
       const message = input.value.trim();
       if (message) {
@@ -130,5 +133,25 @@
         userMsg.className = "chat-message";
         userMsg.textContent = `👨‍⚕️ You: ${message}`;
         chat.appendChild(userMsg);
-        input.value =*
-
+        input.value = "";
+        chat.scrollTop = chat.scrollHeight; // Scroll to bottom
+      }
+    });
+
+    // Speak Button Logic
+    document.getElementById("speak-btn").addEventListener("click", function () {
+      alert("🎤 Speak button pressed (placeholder)");
+    });
+
+    // End Scenario Button Logic
+    document.getElementById("end-scenario-btn").addEventListener("click", function () {
+      const chat = document.getElementById("chat-display");
+      const endMsg = document.createElement("div");
+      endMsg.className = "chat-message";
+      endMsg.textContent = "🚨 Scenario ended.";
+      chat.appendChild(endMsg);
+    });
+  </script>
+
+</body>
+</html>
