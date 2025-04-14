@@ -1,0 +1,45 @@
+{
+  "scene_description": {
+    "default": "You arrive to find a 55-year-old male sitting upright on the couch, clutching his chest. His wife is nearby. The scene appears safe.",
+    "scene_safe": "Yes, the scene is safe for you to enter.",
+    "scene_unsafe": "There are signs of disturbance inside—broken glass and a tipped-over lamp. Ensure the scene is safe before proceeding."
+  },
+  "initial_impression": {
+    "general_appearance": "The patient is conscious, pale, and diaphoretic. He appears anxious and is guarding his chest.",
+    "obvious_bleeding": "There is no visible bleeding.",
+    "number_of_patients": "There is one patient on scene."
+  },
+  "assessment_support": {
+    "airway": "The airway is patent.",
+    "breathing": "Breathing is rapid but unlabored.",
+    "circulation": "Skin is pale, cool, and diaphoretic.",
+    "pulse": "Radial pulse is strong, 112 beats per minute, and regular."
+  },
+  "vital_signs": {
+    "blood_pressure": "Blood pressure is 148/92.",
+    "respiratory_rate": "Respirations are 22 per minute, unlabored.",
+    "pulse_rate": "Pulse is 112, regular.",
+    "spo2": "SpO2 is 96% on room air.",
+    "blood_glucose": "Blood glucose is 98 mg/dL."
+  },
+  "intervention_feedback": {
+    "oxygen_given": "Oxygen is now flowing via non-rebreather at 15 LPM.",
+    "aspirin_given": "324 mg of chewable aspirin has been administered.",
+    "nitro_given": "0.4 mg nitroglycerin has been administered. The patient reports a reduction in pain.",
+    "als_requested": "ALS is en route with a 6-minute ETA."
+  },
+  "transport": {
+    "ready_for_transport": "The patient is secured to the pram and transport is initiated.",
+    "handoff_prompt": "Please provide your radio report to the receiving facility."
+  },
+  "checklist_feedback": {
+    "missed_primary_assessment": "Don’t forget to check airway, breathing, and circulation early.",
+    "missed_opqrst": "Remember to ask about the OPQRST history to identify chest pain characteristics.",
+    "missed_sample": "You still need to ask SAMPLE history questions.",
+    "missed_interventions": "Consider administering oxygen, aspirin, and requesting ALS if not already done."
+  },
+  "scenario_end": {
+    "complete": "Scenario complete. You may now receive feedback.",
+    "awaiting_handoff": "Scenario will end after you provide a complete patient handoff."
+  }
+}
