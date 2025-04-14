@@ -1,140 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EMS Scenario Simulator</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding-bottom: 100px;
-    }
+<script>
+  const scenarios = [
+    "scenario/chest_pain_1.json" // Updated to the new scenario file path
+  ];
 
-    #start-scenario-btn {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 16px;
-      padding: 10px 20px;
-    }
+  const chatDisplay = document.getElementById("chat-display");
+  const startScenarioBtn = document.getElementById("start-scenario-btn");
 
-    #chat-display {
-      border: 1px solid #ddd;
-      padding: 10px;
-      height: 400px;
-      overflow-y: auto;
-      margin: 10px;
-    }
+  // Function to pick a random scenario
+  function getRandomScenario() {
+    const randomIndex = Math.floor(Math.random() * scenarios.length);
+    return scenarios[randomIndex];
+  }
 
-    #input-area {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px;
-      background-color: #f8f8f8;
-      border-top: 1px solid #ccc;
-    }
-
-    #user-input {
-      flex-grow: 1;
-      padding: 10px;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 10px;
-      font-size: 16px;
-    }
-  </style>
-</head>
-<body>
-  <!-- Button to start the scenario -->
-  <button id="start-scenario-btn">Start Scenario</button>
-
-  <!-- Chat display section -->
-  <div id="chat-display">
-    <p>Scenario will appear here...</p>
-  </div>
-
-  <!-- Typing and control area at bottom -->
-  <div id="input-area">
-    <button id="speak-btn">🎤 Speak</button>
-    <input type="text" id="user-input" placeholder="Type your message..." />
-    <button id="send-btn">Send</button>
-    <button id="end-scenario-btn">🚑 End Scenario</button>
-  </div>
-
-  <!-- JavaScript -->
-  <script>
-    const scenarios = [
-      "scenario/chest_pain_001/pain_001.json",
-      "scenario/another_scenario_001.json", // Add more scenario paths here
-      "scenario/another_scenario_002.json"
-    ];
-
-    const chatDisplay = document.getElementById("chat-display");
-    const startScenarioBtn = document.getElementById("start-scenario-btn");
-
-    // Function to pick a random scenario
-    function getRandomScenario() {
-      const randomIndex = Math.floor(Math.random() * scenarios.length);
-      return scenarios[randomIndex];
-    }
-
-    // Function to load a scenario
-    async function loadScenario(scenarioPath) {
-      try {
-        const response = await fetch(scenarioPath);
-        if (!response.ok) {
-          throw new Error("Failed to load scenario file.");
-        }
-
-        const scenarioData = await response.json();
-        displayScenario(scenarioData);
-      } catch (error) {
-        console.error("Error loading scenario:", error);
-        chatDisplay.innerHTML = "<p>⚠️ Failed to load scenario. Please try again.</p>";
+  // Function to load a scenario
+  async function loadScenario(scenarioPath) {
+    try {
+      const response = await fetch(scenarioPath);
+      if (!response.ok) {
+        throw new Error("Failed to load scenario file.");
       }
+
+      const scenarioData = await response.json();
+      displayScenario(scenarioData);
+    } catch (error) {
+      console.error("Error loading scenario:", error);
+      chatDisplay.innerHTML = "<p>⚠️ Failed to load scenario. Please try again.</p>";
     }
+  }
 
-    // Function to display the scenario in the chat
-    function displayScenario(data) {
-      chatDisplay.innerHTML = `
-        <p><strong>Dispatch:</strong> ${data.dispatch}</p>
-        <p><strong>General Impression:</strong> ${data.general_impression}</p>
-        <p><strong>On Contact:</strong> ${data.patient_behavior.on_contact}</p>
-      `;
+  // Function to display the scenario in the chat
+  function displayScenario(data) {
+    chatDisplay.innerHTML = `
+      <p><strong>Dispatch:</strong> ${data.dispatch}</p>
+      <p><strong>General Impression:</strong> ${data.general_impression}</p>
+      <p><strong>On Contact:</strong> ${data.patient.behavior.on_contact}</p>
+    `;
+  }
+
+  // Start scenario button event handler
+  startScenarioBtn.addEventListener("click", () => {
+    const randomScenarioPath = getRandomScenario();
+    loadScenario(randomScenarioPath);
+  });
+
+  // Placeholder for other buttons
+  document.getElementById("send-btn").addEventListener("click", () => {
+    const userInput = document.getElementById("user-input").value.trim();
+    if (userInput) {
+      chatDisplay.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+      document.getElementById("user-input").value = "";
+      chatDisplay.scrollTop = chatDisplay.scrollHeight;
     }
+  });
 
-    // Start scenario button event handler
-    startScenarioBtn.addEventListener("click", () => {
-      const randomScenarioPath = getRandomScenario();
-      loadScenario(randomScenarioPath);
-    });
+  document.getElementById("end-scenario-btn").addEventListener("click", () => {
+    chatDisplay.innerHTML += "<p>🚨 Scenario ended.</p>";
+  });
 
-    // Placeholder for other buttons
-    document.getElementById("send-btn").addEventListener("click", () => {
-      const userInput = document.getElementById("user-input").value.trim();
-      if (userInput) {
-        chatDisplay.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
-        document.getElementById("user-input").value = "";
-        chatDisplay.scrollTop = chatDisplay.scrollHeight;
-      }
-    });
-
-    document.getElementById("end-scenario-btn").addEventListener("click", () => {
-      chatDisplay.innerHTML += "<p>🚨 Scenario ended.</p>";
-    });
-
-    document.getElementById("speak-btn").addEventListener("click", () => {
-      alert("🎤 Speak button pressed (placeholder)");
-    });
-  </script>
-</body>
-</html>
+  document.getElementById("speak-btn").addEventListener("click", () => {
+    alert("🎤 Speak button pressed (placeholder)");
+  });
+</script>
