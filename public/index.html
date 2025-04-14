@@ -1,128 +1,257 @@
-<script>
-  let totalTime = 15 * 60;
-  let countdown;
-  let scenarioActive = false;
-  let history = [];
-  let currentScenario = null;
-  let imageShown = false;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EMS Virtual Patient</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100%;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 10px;
+      background-color: #1e1e1e;
+      color: white;
+      text-align: center;
+    }
+    header img {
+      height: 50px;
+    }
+    #chat-display {
+      flex: 1;
+      padding: 10px;
+      background-color: #f5f5f5;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-message {
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      max-width: 90%;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    }
+    .chat-image {
+      max-width: 300px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    #chat-input {
+      padding: 10px;
+      background-color: #ddd;
+    }
+    #input-row {
+      display: flex;
+    }
+    #user-input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      resize: none;
+      height: 60px;
+    }
+    #send-button {
+      margin-left: 10px;
+      padding: 14px 24px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #button-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+    #mic-button, #end-button {
+      font-size: 18px;
+      padding: 16px 20px;
+      width: 48%;
+      height: 60px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #mic-button {
+      background-color: #2196F3;
+    }
+    #end-button {
+      background-color: #f44336;
+    }
+    #start-button {
+      padding: 20px 40px;
+      font-size: 24px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logo.png" alt="Logo" />
+  </header>
 
-  function startTimer() {
-    const timer = document.getElementById('start-button');
-    scenarioActive = true;
-    countdown = setInterval(() => {
-      const mins = Math.floor(totalTime / 60);
-      const secs = totalTime % 60;
-      timer.textContent = '🕒 ' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-      if (totalTime <= 0) {
-        clearInterval(countdown);
-        timer.textContent = '⏰ Time is up!';
-        scenarioActive = false;
-      }
-      totalTime--;
-    }, 1000);
-  }
+  <div style="text-align: center; padding: 10px;">
+    <button id="start-button" onclick="startRandomScenario()">🚑 Start Simulation</button>
+  </div>
 
-  function stopTimer() {
-    clearInterval(countdown);
-    document.getElementById('start-button').textContent = '⏹ Scenario Ended';
-    scenarioActive = false;
-  }
+  <div id="chat-display"></div>
 
-  async function sendMessage(messageOverride = null) {
-    const input = document.getElementById('user-input');
-    const message = messageOverride || input.value.trim();
-    if (!message) return;
+  <div id="chat-input">
+    <div id="input-row">
+      <textarea id="user-input" placeholder="Type your message here..."></textarea>
+      <button id="send-button" onclick="sendMessage()">Send</button>
+    </div>
+    <div id="button-row">
+      <button id="mic-button" onclick="startVoiceInput()">🎤 Speak</button>
+      <button id="end-button" onclick="endScenario()">End Scenario</button>
+    </div>
+  </div>
 
-    const chat = document.getElementById('chat-display');
-    const userMsg = document.createElement('div');
-    userMsg.className = 'chat-message';
-    userMsg.textContent = message;
-    chat.appendChild(userMsg);
-    chat.scrollTop = chat.scrollHeight;
+  <script>
+    let totalTime = 15 * 60;
+    let countdown;
+    let scenarioActive = false;
+    let history = [];
+    let currentScenario = null;
+    let imageShown = false;
 
-    // Show patient image if contact made
-    if (!imageShown && currentScenario?.media_triggers?.on_contact && /contact|what.*look|see/i.test(message)) {
-      const trigger = currentScenario.media_triggers.on_contact;
-      if (trigger.startsWith("show_image:")) {
-        const img = document.createElement("img");
-        img.src = `/scenarios/${trigger.replace("show_image:", "")}`;
-        img.alt = "Patient";
-        img.className = "chat-image";
-        chat.appendChild(img);
-        chat.scrollTop = chat.scrollHeight;
-        imageShown = true;
-      }
+    function startTimer() {
+      const timer = document.getElementById('start-button');
+      scenarioActive = true;
+      countdown = setInterval(() => {
+        const mins = Math.floor(totalTime / 60);
+        const secs = totalTime % 60;
+        timer.textContent = '🕒 ' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        if (totalTime <= 0) {
+          clearInterval(countdown);
+          timer.textContent = '⏰ Time is up!';
+          scenarioActive = false;
+        }
+        totalTime--;
+      }, 1000);
     }
 
-    if (scenarioActive && /transport(ed)? by ambulance/i.test(message)) {
-      stopTimer();
+    function stopTimer() {
+      clearInterval(countdown);
+      document.getElementById('start-button').textContent = '⏹ Scenario Ended';
+      scenarioActive = false;
     }
 
-    input.value = '';
+    async function sendMessage(messageOverride = null) {
+      const input = document.getElementById('user-input');
+      const message = messageOverride || input.value.trim();
+      if (!message) return;
 
-    try {
-      const response = await fetch('/.netlify/functions/handleChat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, history, scenario: currentScenario })
-      });
-
-      const data = await response.json();
-      history = data.updatedHistory;
-
-      const botReply = data?.reply || '⚠️ No response received from patient.';
-      const botMsg = document.createElement('div');
-      botMsg.className = 'chat-message';
-      botMsg.textContent = botReply;
-      chat.appendChild(botMsg);
+      const chat = document.getElementById('chat-display');
+      const userMsg = document.createElement('div');
+      userMsg.className = 'chat-message';
+      userMsg.textContent = message;
+      chat.appendChild(userMsg);
       chat.scrollTop = chat.scrollHeight;
 
-      speakText(botReply);
-    } catch {
-      const errMsg = document.createElement('div');
-      errMsg.className = 'chat-message';
-      errMsg.textContent = 'Error communicating with AI.';
-      chat.appendChild(errMsg);
+      // Trigger photo display if appropriate
+      if (!imageShown && currentScenario?.media_triggers?.on_contact && /contact|what.*look|what.*see/i.test(message)) {
+        const trigger = currentScenario.media_triggers.on_contact;
+        if (trigger.startsWith("show_image:")) {
+          const imageFile = trigger.replace("show_image:", "");
+          const img = document.createElement("img");
+          img.src = `/scenarios/${imageFile}`;
+          img.alt = "Patient";
+          img.className = "chat-image";
+          chat.appendChild(img);
+          chat.scrollTop = chat.scrollHeight;
+          imageShown = true;
+        }
+      }
+
+      if (scenarioActive && /transport(ed)? by ambulance/i.test(message)) {
+        stopTimer();
+      }
+
+      input.value = '';
+
+      try {
+        const response = await fetch('/.netlify/functions/handleChat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, history, scenario: currentScenario })
+        });
+
+        const data = await response.json();
+        history = data.updatedHistory;
+
+        const botReply = data?.reply || '⚠️ No response received from patient.';
+        const botMsg = document.createElement('div');
+        botMsg.className = 'chat-message';
+        botMsg.textContent = botReply;
+        chat.appendChild(botMsg);
+        chat.scrollTop = chat.scrollHeight;
+
+        speakText(botReply);
+      } catch {
+        const errMsg = document.createElement('div');
+        errMsg.className = 'chat-message';
+        errMsg.textContent = 'Error communicating with AI.';
+        chat.appendChild(errMsg);
+      }
     }
-  }
 
-  function speakText(text) {
-    const synth = window.speechSynthesis;
-    const utter = new SpeechSynthesisUtterance(text);
-    synth.speak(utter);
-  }
+    function speakText(text) {
+      const synth = window.speechSynthesis;
+      const utter = new SpeechSynthesisUtterance(text);
+      synth.speak(utter);
+    }
 
-  function endScenario() {
-    stopTimer();
-    const chat = document.getElementById('chat-display');
-    const endMsg = document.createElement('div');
-    endMsg.className = 'chat-message';
-    endMsg.textContent = '🚑 Scenario ended. Preparing summary and feedback...';
-    chat.appendChild(endMsg);
-  }
+    function endScenario() {
+      stopTimer();
+      const chat = document.getElementById('chat-display');
+      const endMsg = document.createElement('div');
+      endMsg.className = 'chat-message';
+      endMsg.textContent = '🚑 Scenario ended. Preparing summary and feedback...';
+      chat.appendChild(endMsg);
+    }
 
-  function startVoiceInput() {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    function startVoiceInput() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-    recognition.onresult = function(event) {
-      const speechResult = event.results[0][0].transcript;
-      sendMessage(speechResult);
-    };
+      recognition.onresult = function(event) {
+        const speechResult = event.results[0][0].transcript;
+        sendMessage(speechResult);
+      };
 
-    recognition.onerror = function(event) {
-      alert('Mic error: ' + event.error);
-    };
+      recognition.onerror = function(event) {
+        alert('Mic error: ' + event.error);
+      };
 
-    recognition.start();
-  }
+      recognition.start();
+    }
 
-  async function startRandomScenario() {
-    try {
-      const file = "chest_pain_001.json";
-      const res = await fetch(`/scenarios/${file}`);
+    async function startRandomScenario() {
+      const files = ["chest_pain_001.json"]; // Add more files here as needed
+      const selected = files[Math.floor(Math.random() * files.length)];
+
+      const res = await fetch(`/scenarios/${selected}`);
       currentScenario = await res.json();
       imageShown = false;
       history = [];
@@ -137,13 +266,7 @@
 
       totalTime = 15 * 60;
       startTimer();
-    } catch (error) {
-      const chat = document.getElementById('chat-display');
-      const errMsg = document.createElement('div');
-      errMsg.className = 'chat-message';
-      errMsg.textContent = "⚠️ Scenario file could not be loaded.";
-      chat.appendChild(errMsg);
-      console.error(error);
     }
-  }
-</script>
+  </script>
+</body>
+</html>
