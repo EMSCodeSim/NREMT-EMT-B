@@ -3,12 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EMS Scenario</title>
+  <title>EMS Scenario Simulator</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding-bottom: 100px; /* Space for bottom bar */
+      padding-bottom: 100px;
+    }
+
+    #start-scenario-btn {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 16px;
+      padding: 10px 20px;
     }
 
     #chat-display {
@@ -42,26 +51,16 @@
       padding: 10px;
       font-size: 16px;
     }
-
-    #start-scenario-btn {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 16px;
-      padding: 10px 20px;
-    }
   </style>
 </head>
 <body>
+  <!-- Button to start the scenario -->
+  <button id="start-scenario-btn">Start Scenario</button>
 
   <!-- Chat display section -->
   <div id="chat-display">
     <p>Scenario will appear here...</p>
   </div>
-
-  <!-- Button to start the scenario -->
-  <button id="start-scenario-btn">Start Scenario</button>
 
   <!-- Typing and control area at bottom -->
   <div id="input-area">
@@ -73,85 +72,69 @@
 
   <!-- JavaScript -->
   <script>
-    // Start Scenario Button Logic
-    document.getElementById("start-scenario-btn").addEventListener("click", function () {
-      const button = this;
-      let timeLeft = 15 * 60; // 15 minutes in seconds
+    const scenarios = [
+      "scenario/chest_pain_001/pain_001.json",
+      "scenario/another_scenario_001.json", // Add more scenario paths here
+      "scenario/another_scenario_002.json"
+    ];
 
-      // Countdown Timer
-      function updateTimer() {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        button.textContent = `Time Left: ${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-        timeLeft--;
+    const chatDisplay = document.getElementById("chat-display");
+    const startScenarioBtn = document.getElementById("start-scenario-btn");
 
-        // Stop the timer when it reaches 0
-        if (timeLeft < 0) {
-          clearInterval(timerInterval);
-          button.textContent = "Time's Up!";
-        }
-      }
+    // Function to pick a random scenario
+    function getRandomScenario() {
+      const randomIndex = Math.floor(Math.random() * scenarios.length);
+      return scenarios[randomIndex];
+    }
 
-      // Disable the button and start the countdown
-      button.disabled = true;
-      updateTimer();
-      const timerInterval = setInterval(updateTimer, 1000);
-
-      // Start the random scenario
-      startRandomScenario();
-    });
-
-    // Start Random Scenario Logic
-    async function startRandomScenario() {
+    // Function to load a scenario
+    async function loadScenario(scenarioPath) {
       try {
-        const res = await fetch("/scenario/chest_pain_001/pain_001.json");
-        const currentScenario = await res.json();
-        const chat = document.getElementById("chat-display");
-        chat.innerHTML = "";
+        const response = await fetch(scenarioPath);
+        if (!response.ok) {
+          throw new Error("Failed to load scenario file.");
+        }
 
-        const dispatch = document.createElement("div");
-        dispatch.className = "chat-message";
-        dispatch.textContent = `📟 Dispatch: ${currentScenario.dispatch}`;
-        chat.appendChild(dispatch);
+        const scenarioData = await response.json();
+        displayScenario(scenarioData);
       } catch (error) {
-        const chat = document.getElementById("chat-display");
-        const errMsg = document.createElement("div");
-        errMsg.className = "chat-message";
-        errMsg.textContent = "⚠️ Could not load chest pain scenario.";
-        chat.appendChild(errMsg);
         console.error("Error loading scenario:", error);
+        chatDisplay.innerHTML = "<p>⚠️ Failed to load scenario. Please try again.</p>";
       }
     }
 
-    // Send Message Button Logic
-    document.getElementById("send-btn").addEventListener("click", function () {
-      const input = document.getElementById("user-input");
-      const message = input.value.trim();
-      if (message) {
-        const chat = document.getElementById("chat-display");
-        const userMsg = document.createElement("div");
-        userMsg.className = "chat-message";
-        userMsg.textContent = `👨‍⚕️ You: ${message}`;
-        chat.appendChild(userMsg);
-        input.value = "";
-        chat.scrollTop = chat.scrollHeight; // Scroll to bottom
+    // Function to display the scenario in the chat
+    function displayScenario(data) {
+      chatDisplay.innerHTML = `
+        <p><strong>Dispatch:</strong> ${data.dispatch}</p>
+        <p><strong>General Impression:</strong> ${data.general_impression}</p>
+        <p><strong>On Contact:</strong> ${data.patient_behavior.on_contact}</p>
+      `;
+    }
+
+    // Start scenario button event handler
+    startScenarioBtn.addEventListener("click", () => {
+      const randomScenarioPath = getRandomScenario();
+      loadScenario(randomScenarioPath);
+    });
+
+    // Placeholder for other buttons
+    document.getElementById("send-btn").addEventListener("click", () => {
+      const userInput = document.getElementById("user-input").value.trim();
+      if (userInput) {
+        chatDisplay.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+        document.getElementById("user-input").value = "";
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
       }
     });
 
-    // Speak Button Logic
-    document.getElementById("speak-btn").addEventListener("click", function () {
+    document.getElementById("end-scenario-btn").addEventListener("click", () => {
+      chatDisplay.innerHTML += "<p>🚨 Scenario ended.</p>";
+    });
+
+    document.getElementById("speak-btn").addEventListener("click", () => {
       alert("🎤 Speak button pressed (placeholder)");
     });
-
-    // End Scenario Button Logic
-    document.getElementById("end-scenario-btn").addEventListener("click", function () {
-      const chat = document.getElementById("chat-display");
-      const endMsg = document.createElement("div");
-      endMsg.className = "chat-message";
-      endMsg.textContent = "🚨 Scenario ended.";
-      chat.appendChild(endMsg);
-    });
   </script>
-
 </body>
 </html>
