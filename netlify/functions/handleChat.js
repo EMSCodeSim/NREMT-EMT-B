@@ -59,7 +59,7 @@ exports.handler = async function (event, context) {
     // If we didn't match anything specific, escalate to ChatGPT
     if (!reply || typeof reply !== "string") {
       const completion = await openai.createChatCompletion({
-        model: "gpt-4-turbo",
+       model: "gpt-3.5-turbo",
         messages: [
           {
             role: "system",
