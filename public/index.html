@@ -4,56 +4,121 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EMS Scenario</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding-bottom: 100px; /* space for bottom bar */
+    }
+
+    #chat-display {
+      border: 1px solid #ddd;
+      padding: 10px;
+      height: 400px;
+      overflow-y: auto;
+      margin: 10px;
+    }
+
+    #input-area {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      background-color: #f8f8f8;
+      border-top: 1px solid #ccc;
+    }
+
+    #user-input {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
+
   <!-- Chat display section -->
-  <div id="chat-display" style="border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; height: 200px; overflow-y: auto;">
+  <div id="chat-display">
     <p>Scenario will appear here...</p>
   </div>
-  
-  <!-- Button to start the random scenario -->
-  <button onclick="startRandomScenario()">Start Scenario</button>
 
-  <!-- JavaScript for handling the scenario -->
+  <!-- Button to start the scenario -->
+  <div style="text-align: center; margin: 10px;">
+    <button onclick="startRandomScenario()">Start Scenario</button>
+  </div>
+
+  <!-- Typing and control area at bottom -->
+  <div id="input-area">
+    <button onclick="speak()">🎤 Speak</button>
+    <input type="text" id="user-input" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="endScenario()">🚑 End Scenario</button>
+  </div>
+
+  <!-- JavaScript -->
   <script>
     async function startRandomScenario() {
       try {
-        // Fetch the chest pain scenario JSON file
         const res = await fetch("/scenario/chest_pain_001/pain_001.json");
         const currentScenario = await res.json();
-        
-        // Initialize variables
-        let imageShown = false;
-        const history = [];
-        
-        // Get chat display element
         const chat = document.getElementById("chat-display");
-        chat.innerHTML = ""; // Clear previous content
-        
-        // Add the dispatch message to the chat
+        chat.innerHTML = "";
+
         const dispatch = document.createElement("div");
         dispatch.className = "chat-message";
         dispatch.textContent = `📟 Dispatch: ${currentScenario.dispatch}`;
         chat.appendChild(dispatch);
 
-        // Start the timer (assuming there's a startTimer function defined elsewhere)
-        const totalTime = 15 * 60;
-        startTimer(totalTime);
+        startTimer(15 * 60);
       } catch (error) {
-        // Handle errors by showing a message in the chat
         const chat = document.getElementById("chat-display");
         const errMsg = document.createElement("div");
         errMsg.className = "chat-message";
         errMsg.textContent = "⚠️ Could not load chest pain scenario.";
         chat.appendChild(errMsg);
-        console.error("Error loading chest pain scenario:", error);
+        console.error("Error loading scenario:", error);
       }
     }
 
-    // Mock startTimer function (replace or remove if implemented elsewhere)
+    function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (message) {
+        const chat = document.getElementById("chat-display");
+        const userMsg = document.createElement("div");
+        userMsg.className = "chat-message";
+        userMsg.textContent = `👨‍⚕️ You: ${message}`;
+        chat.appendChild(userMsg);
+        input.value = "";
+        chat.scrollTop = chat.scrollHeight; // scroll to bottom
+      }
+    }
+
+    function speak() {
+      alert("🎤 Speak button pressed (placeholder)");
+    }
+
+    function endScenario() {
+      const chat = document.getElementById("chat-display");
+      const endMsg = document.createElement("div");
+      endMsg.className = "chat-message";
+      endMsg.textContent = "🚨 Scenario ended.";
+      chat.appendChild(endMsg);
+    }
+
     function startTimer(totalTime) {
       console.log(`Timer started for ${totalTime} seconds.`);
     }
   </script>
+
 </body>
 </html>
