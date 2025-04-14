@@ -1,17 +1,15 @@
-
 {
-  "name": "ems-virtual-patient",
+  "name": "NREMT-EMT-B",
   "version": "1.0.0",
-  "description": "EMS Virtual Patient Simulation with GPT and Netlify Functions",
+  "description": "EMS Patient Simulator with ChatGPT and Netlify Functions",
   "main": "index.js",
   "scripts": {
     "start": "netlify dev"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
+  "type": "module",
   "dependencies": {
     "node-fetch": "^3.3.2"
-  },
-  "type": "module"
+  }
 }
