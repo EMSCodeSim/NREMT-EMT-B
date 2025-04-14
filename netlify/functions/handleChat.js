@@ -7,17 +7,18 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-// Load a scenario by ID from the /scenario folder
+// Load the renamed scenario file
 function loadScenario(scenarioId) {
-  const scenarioPath = path.join(__dirname, `../../scenario/${scenarioId}/chest_pain_001.json`);
+  const scenarioPath = path.join(__dirname, `../../scenario/${scenarioId}/pain_001.json`);
   if (fs.existsSync(scenarioPath)) {
     const data = fs.readFileSync(scenarioPath, "utf8");
     return JSON.parse(data);
+  } else {
+    console.error("Scenario file not found:", scenarioPath);
+    return null;
   }
-  return null;
 }
 
-// Load prompts
 function loadPrompt(fileName, scenarioId) {
   const promptPath = path.join(__dirname, `../../scenario/${scenarioId}/${fileName}`);
   if (fs.existsSync(promptPath)) {
@@ -44,47 +45,23 @@ exports.handler = async function (event, context) {
     const patientPrompts = loadPrompt("patient_prompts.json", scenarioId);
     const proctorPrompts = loadPrompt("proctor_prompts.json", scenarioId);
 
-    // Very basic logic to decide who should respond
+    // Keyword matching
     const isVitalsRequest = /blood pressure|pulse|respirations|spo2|breath sounds/i.test(userMessage);
     const isPatientInteraction = /pain|history|medications|describe|where|when|what/i.test(userMessage);
 
     let reply = "";
 
     if (isVitalsRequest && proctorPrompts?.vital_signs) {
-      reply = proctorPrompts.vital_signs;
+      reply = proctorPrompts.vital_signs.blood_pressure || "BP is 120/80.";
     } else if (isPatientInteraction && patientPrompts?.opqrst) {
-      reply = patientPrompts.opqrst;
+      reply = patientPrompts.opqrst.quality || "It's like pressure in my chest.";
     }
 
-    // If we didn't match anything specific, escalate to ChatGPT
+    // Fallback to ChatGPT if no prebuilt match
     if (!reply || typeof reply !== "string") {
       const completion = await openai.createChatCompletion({
-       model: "gpt-3.5-turbo",
+        model: "gpt-3.5-turbo", // For testing
         messages: [
           {
             role: "system",
-            content: `You are an EMS simulation AI. Respond realistically as either the patient or the test proctor, based on the message given. The scenario is: ${scenario.title}. Dispatch: ${scenario.dispatch}`
-          },
-          {
-            role: "user",
-            content: userMessage
-          }
-        ]
-      });
-
-      reply = completion.data.choices[0].message.content;
-    }
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ reply })
-    };
-
-  } catch (err) {
-    console.error("Error in handleChat:", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Server error." })
-    };
-  }
-};
+            content: `You are an EMS simulation AI.
