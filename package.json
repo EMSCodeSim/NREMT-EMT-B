@@ -1,7 +1,6 @@
 {
   "name": "nremt-emt-b",
   "version": "1.0.0",
-  "description": "EMS Code Sim - NREMT EMT-B Virtual Patient Simulator",
   "type": "commonjs",
   "scripts": {
     "build": "echo 'No build needed'"
