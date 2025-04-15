@@ -60,7 +60,7 @@ exports.handler = async function (event, context) {
     // Fallback to ChatGPT if no prebuilt match
     if (!reply || typeof reply !== "string") {
       const completion = await openai.createChatCompletion({
-        model: "gpt-3.5-turbo", // For testing
+        model: "gpt-4-turbo", // For testing
         messages: [
           {
             role: "system",
